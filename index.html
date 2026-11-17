@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مغامرة السلوك والمواظبة - للطالبات المتميزات</title>
+    <!-- تحميل خط تجوال المناسب للأطفال واللغة العربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <!-- تحميل مكتبة Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تحميل مكتبة الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- تحميل مكتبة Tone.js للأصوات التفاعلية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- تحميل مكتبة Confetti للاحتفال -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #f3e8ff 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* حركات وتأثيرات مخصصة */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite;
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* تصميم الأزرار ثلاثية الأبعاد اللطيفة */
+        .btn-3d {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 #db2777;
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #db2777;
+        }
+
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 0 #e5e7eb;
+        }
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 0 #f472b6;
+            border-color: #f472b6;
+        }
+        .btn-option:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #f472b6;
+        }
+
+        /* خلفيات زخرفية */
+        .cloud {
+            position: fixed;
+            opacity: 0.6;
+            z-index: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-3 sm:p-6 text-gray-800 relative">
+
+    <!-- عناصر زخرفية في الخلفية -->
+    <div class="cloud top-10 left-10 text-pink-200 text-6xl animate-float"><i class="fas fa-cloud"></i></div>
+    <div class="cloud top-24 right-12 text-purple-200 text-5xl animate-float" style="animation-delay: 1s;"><i class="fas fa-star"></i></div>
+    <div class="cloud bottom-16 left-16 text-yellow-200 text-5xl animate-float" style="animation-delay: 1.5s;"><i class="fas fa-heart"></i></div>
+    <div class="cloud bottom-20 right-10 text-pink-200 text-7xl animate-float" style="animation-delay: 0.5s;"><i class="fas fa-cloud"></i></div>
+
+    <!-- الحاوية الرئيسية للعبة -->
+    <main class="w-full max-w-2xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-pink-300 p-5 sm:p-8 relative z-10 overflow-hidden">
+        
+        <!-- الشريط العلوي (يظهر أثناء اللعب) -->
+        <header id="game-header" class="hidden flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b-2 border-pink-100">
+            <!-- عداد النجوم -->
+            <div class="flex items-center gap-2 bg-yellow-100 border-2 border-yellow-300 px-4 py-2 rounded-2xl shadow-sm">
+                <i class="fas fa-star text-yellow-500 text-xl animate-spin" style="animation-duration: 6s;"></i>
+                <span class="font-extrabold text-yellow-800 text-lg">النجوم: <span id="score-display">0</span></span>
+            </div>
+
+            <!-- شريط التقدم -->
+            <div class="flex-1 min-w-[140px] mx-2">
+                <div class="flex justify-between text-xs font-bold text-pink-600 mb-1">
+                    <span>التقدم في المغامرة</span>
+                    <span id="progress-text">1 / 8</span>
+                </div>
+                <div class="w-full bg-pink-100 rounded-full h-3.5 border border-pink-200 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-l from-pink-500 to-purple-500 h-full rounded-full transition-all duration-500" style="width: 12.5%;"></div>
+                </div>
+            </div>
+
+            <!-- زر كتم/تشغيل الصوت -->
+            <button id="sound-toggle" onclick="toggleSound()" class="p-2.5 bg-purple-100 hover:bg-purple-200 text-purple-600 rounded-2xl border-2 border-purple-200 transition" title="تشغيل/إيقاف الصوت">
+                <i id="sound-icon" class="fas fa-volume-up text-lg"></i>
+            </button>
+        </header>
+
+        <!-- 1. شاشة البداية -->
+        <section id="start-screen" class="text-center py-4">
+            <div class="inline-block bg-pink-100 text-pink-600 font-bold px-4 py-1.5 rounded-full text-sm mb-4 border border-pink-200">
+                🌸 للمرحلة الابتدائية 🌸
+            </div>
+            
+            <!-- رسمة توضيحية لطيفة -->
+            <div class="w-36 h-36 mx-auto mb-4 bg-gradient-to-b from-pink-100 to-purple-100 rounded-full flex items-center justify-center border-4 border-white shadow-lg animate-float">
+                <span class="text-7xl" role="img" aria-label="طالبة متميزة">👩‍🎓</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600 mb-3 leading-tight">
+                مغامرة السلوك والمواظبة
+            </h1>
+            <p class="text-gray-600 text-base sm:text-lg mb-6 max-w-md mx-auto leading-relaxed font-medium">
+                أهلاً بكِ يا بطلة! هل أنتِ مستعدة لمساعدة صديقتنا <b>"نورة"</b> في اتخاذ القرارات الصحيحة في المدرسة وجمع النجوم الذهبية؟ 🌟
+            </p>
+
+            <!-- حقل اختياري لاسم الطالبة -->
+            <div class="max-w-xs mx-auto mb-6">
+                <label for="student-name" class="block text-sm font-bold text-pink-700 mb-1.5">اكتبي اسمكِ الجميل (اختياري):</label>
+                <input type="text" id="student-name" placeholder="مثال: سارة" class="w-full px-4 py-3 rounded-2xl border-2 border-pink-200 focus:border-pink-500 focus:outline-none text-center font-bold text-gray-700 bg-pink-50/50">
+            </div>
+
+            <button onclick="startGame()" class="btn-3d bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xl px-10 py-4 rounded-2xl inline-flex items-center gap-3 cursor-pointer">
+                <span>ابدئي المغامرة الآن</span>
+                <i class="fas fa-play text-sm"></i>
+            </button>
+        </section>
+
+        <!-- 2. شاشة اللعب (المواقف التفاعلية) -->
+        <section id="quiz-screen" class="hidden">
+            <!-- بطاقة الموقف -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-pink-200 rounded-3xl p-5 sm:p-6 mb-6 text-center relative shadow-inner">
+                <span id="category-badge" class="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-sm">
+                    المواظبة والانضباط
+                </span>
+                
+                <!-- أيقونة الموقف -->
+                <div id="scenario-emoji" class="text-6xl sm:text-7xl my-3 animate-pulse-soft">
+                    ⏰
+                </div>
+
+                <!-- نص الموقف -->
+                <h2 id="question-text" class="text-xl sm:text-2xl font-extrabold text-gray-800 leading-snug">
+                    جاري تحميل الموقف...
+                </h2>
+            </div>
+
+            <!-- خيارات الإجابة -->
+            <div id="options-container" class="grid grid-cols-1 gap-3.5 mb-4">
+                <!-- يتم توليد الأزرار هنا بواسطة الجافاسكربت -->
+            </div>
+
+            <!-- صندوق التغذية الراجعة (يظهر بعد الإجابة) -->
+            <div id="feedback-box" class="hidden rounded-2xl p-4 sm:p-5 border-2 transition-all duration-300 mt-4">
+                <div class="flex items-start gap-3">
+                    <div id="feedback-icon" class="text-3xl mt-0.5">🌟</div>
+                    <div class="flex-1">
+                        <h3 id="feedback-title" class="font-black text-lg mb-1">أحسنتِ يا بطلة!</h3>
+                        <p id="feedback-message" class="text-sm sm:text-base font-medium leading-relaxed"></p>
+                    </div>
+                </div>
+                <div class="mt-4 text-left">
+                    <button id="next-btn" onclick="nextQuestion()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition inline-flex items-center gap-2 cursor-pointer">
+                        <span>الموقف التالي</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. شاشة النهاية والنتيجة (شهادة التميز) -->
+        <section id="result-screen" class="hidden text-center py-4">
+            <div class="bg-gradient-to-b from-yellow-50 to-pink-50 border-4 border-yellow-300 rounded-3xl p-6 sm:p-8 relative shadow-lg">
+                <!-- شارة التاج -->
+                <div class="w-24 h-24 mx-auto -mt-14 mb-3 bg-yellow-400 rounded-full flex items-center justify-center border-4 border-white shadow-md text-5xl animate-bounce">
+                    👑
+                </div>
+
+                <h2 class="text-2xl sm:text-3xl font-black text-pink-600 mb-2">
+                    شهادة تميز في السلوك والمواظبة
+                </h2>
+                
+                <p class="text-gray-600 font-bold text-base mb-4">
+                    تُمنح هذه الشهادة للطالبة المتألقة:
+                </p>
+
+                <div id="certificate-name" class="text-2xl sm:text-3xl font-black text-purple-700 bg-white py-2 px-6 rounded-2xl inline-block border-2 border-purple-200 shadow-sm mb-5">
+                    البطلة المتميزة
+                </div>
+
+                <!-- ملخص النجوم -->
+                <div class="flex justify-center items-center gap-2 text-2xl sm:text-3xl font-black text-yellow-600 mb-4">
+                    <span>حصلتِ على</span>
+                    <span id="final-score" class="bg-yellow-200 px-3 py-1 rounded-xl text-yellow-800">8</span>
+                    <span>من</span>
+                    <span id="total-questions">8</span>
+                    <span>نجوم! ⭐</span>
+                </div>
+
+                <p id="final-message" class="text-gray-700 font-medium text-base sm:text-lg mb-6 leading-relaxed">
+                    أنتِ قدوة رائعة في مدرستكِ! التزامكِ بالأخلاق الحسنة والمواظبة يجعلكِ نجمة تضيء في كل مكان.
+                </p>
+
+                <!-- أزرار التحكم في النهاية -->
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="restartGame()" class="btn-3d bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold px-8 py-3.5 rounded-2xl inline-flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-redo"></i>
+                        <span>العب مرة أخرى</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- تذييل بسيط -->
+    <footer class="mt-6 text-center text-pink-700/70 text-xs sm:text-sm font-bold relative z-10">
+        صُنع بكل حب لتعزيز القيم التربوية والسلوك الإيجابي 💖
+    </footer>
+
+    <script>
+        // ==========================================
+        // 1. بيانات المواقف التربوية (قواعد السلوك والمواظبة)
+        // ==========================================
+        const scenarios = [
+            {
+                category: "المواظبة والانضباط",
+                emoji: "⏰",
+                question: "رنّ منبه الصباح وحان وقت الاستعداد للمدرسة، ماذا تفعل نورة؟",
+                options: [
+                    { text: "تستيقظ بنشاط وتتوضأ وتستعد للذهاب مبكراً", isCorrect: true },
+                    { text: "تطفئ المنبه وتعود للنوم وتغيب بدون عذر", isCorrect: false },
+                    { text: "تتأخر في اللعب وتصل بعد انتهاء الطابور الصباحي", isCorrect: false }
+                ],
+                explanation: "الاستيقاظ مبكراً والحضور قبل الطابور الصباحي يدل على اهتمامكِ بدروسكِ وانضباطكِ الرائع!"
+            },
+            {
+                category: "المظهر والنظام",
+                emoji: "👗",
+                question: "عند الاستعداد للذهاب إلى المدرسة، كيف تختار نورة ملابسها؟",
+                options: [
+                    { text: "ترتدي فستان حفلات ملون وإكسسوارات كثيرة", isCorrect: false },
+                    { text: "ترتدي الزي المدرسي النظيف والمرتب", isCorrect: true },
+                    { text: "تذهب بملابس النوم لأنها مستعجلة", isCorrect: false }
+                ],
+                explanation: "الالتزام بالزي المدرسي النظيف والمرتب يعكس احترامكِ للمدرسة وجمال مظهركِ."
+            },
+            {
+                category: "آداب الفصل",
+                emoji: "🙋‍♀️",
+                question: "تشرح المعلمة الدرس بحماس، وأرادت نورة أن تسأل سؤالاً، ماذا تفعل؟",
+                options: [
+                    { text: "تتكلم بصوت عالٍ وتقاطع المعلمة", isCorrect: false },
+                    { text: "تتحدث مع زميلتها التي تجلس بجانبها", isCorrect: false },
+                    { text: "ترفع يدها بهدوء وتنتظر إذن المعلمة", isCorrect: true }
+                ],
+                explanation: "رفع اليد والاستئذان قبل الكلام من أجمل آداب التعلم واحترام المعلمة والزميلات."
+            },
+            {
+                category: "المحافظة على الممتلكات",
+                emoji: "🏫",
+                question: "وجدت نورة قلماً ملوناً على طاولتها في الفصل، ماذا تفعل؟",
+                options: [
+                    { text: "ترسم به على طاولة المدرسة وجدار الفصل", isCorrect: false },
+                    { text: "تحافظ على نظافة الطاولة وتبحث عن صاحبة القلم", isCorrect: true },
+                    { text: "تكسر القلم وترميه على الأرض", isCorrect: false }
+                ],
+                explanation: "المدرسة بيتنا الثاني، والمحافظة على نظافتها وأثاثها واجب على كل طالبة متميزة، وكذلك الأمانة!"
+            },
+            {
+                category: "التعامل مع الزميلات",
+                emoji: "🤝",
+                question: "في وقت الفسحة، رأت نورة طالبة جديدة تجلس وحيدة وحزينة، ماذا تفعل؟",
+                options: [
+                    { text: "تبتسم لها وتدعوها للعب وتناول الفطور معها", isCorrect: true },
+                    { text: "تتجاهلها وتذهب بعيداً", isCorrect: false },
+                    { text: "تضحك عليها مع صديقاتها", isCorrect: false }
+                ],
+                explanation: "اللطف والتعاون ومساعدة الآخرين صفات تجعل منكِ صديقة محبوبة وذات قلب كبير."
+            },
+            {
+                category: "الأمن والسلامة",
+                emoji: "🚶‍♀️",
+                question: "انتهت الفسحة وحان وقت العودة إلى الفصول عبر الدرج، كيف تمشي نورة؟",
+                options: [
+                    { text: "تركض بسرعة وتدفع زميلاتها لتصل أولاً", isCorrect: false },
+                    { text: "تقفز فوق درجات السلم", isCorrect: false },
+                    { text: "تمشي بهدوء ونظام في الصف دون تدافع", isCorrect: true }
+                ],
+                explanation: "المشي بهدوء ونظام يحميكِ ويحمي زميلاتكِ من السقوط والإصابات لا قدر الله."
+            },
+            {
+                category: "الالتزام بالأنظمة",
+                emoji: "📱",
+                question: "هل يُسمح بإحضار الهاتف الجوال أو الألعاب الإلكترونية إلى المدرسة؟",
+                options: [
+                    { text: "نعم، للعب بها أثناء الحصص", isCorrect: false },
+                    { text: "لا، الالتزام بقواعد المدرسة يمنع إحضارها", isCorrect: true },
+                    { text: "نعم، لتصوير الزميلات في الساحة", isCorrect: false }
+                ],
+                explanation: "عدم إحضار الهواتف والألعاب يحافظ على تركيزكِ في الدراسة ويحمي خصوصية الجميع."
+            },
+            {
+                category: "الانصراف الآمن",
+                emoji: "🚌",
+                question: "دق جرس نهاية اليوم الدراسي، كيف تتصرف نورة عند الخروج؟",
+                options: [
+                    { text: "تنتظر في المكان المخصص بهدوء حتى يصل ولي أمرها", isCorrect: true },
+                    { text: "تخرج إلى الشارع وحدها دون إخبار المعلمة المناوبة", isCorrect: false },
+                    { text: "تركض بين السيارات في المواقف", isCorrect: false }
+                ],
+                explanation: "الانتظار في المكان المخصص والآمن داخل المدرسة يضمن سلامتكِ حتى عودتكِ للمنزل."
+            }
+        ];
+
+        // ==========================================
+        // 2. متغيرات حالة اللعبة
+        // ==========================================
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let studentName = "";
+        let soundEnabled = true;
+        let synth = null;
+
+        // ==========================================
+        // 3. نظام المؤثرات الصوتية (Tone.js)
+        // ==========================================
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const now = Tone.now();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n", now);
+                } else if (type === 'correct') {
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.1);
+                    synth.triggerAttackRelease("G5", "8n", now + 0.2);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease("E4", "16n", now);
+                    synth.triggerAttackRelease("C4", "8n", now + 0.15);
+                } else if (type === 'win') {
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.12);
+                    synth.triggerAttackRelease("G5", "16n", now + 0.24);
+                    synth.triggerAttackRelease("C6", "4n", now + 0.36);
+                }
+            } catch (e) {
+                console.log("Audio play skipped:", e);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = "fas fa-volume-up text-lg";
+                playSound('click');
+            } else {
+                icon.className = "fas fa-volume-mute text-lg text-gray-400";
+            }
+        }
+
+        // ==========================================
+        // 4. منطق التحكم في اللعبة
+        // ==========================================
+        function startGame() {
+            playSound('click');
+            const nameInput = document.getElementById('student-name').value.trim();
+            studentName = nameInput ? nameInput : "البطلة المتميزة";
+
+            currentQuestionIndex = 0;
+            score = 0;
+
+            // تبديل الشاشات
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-header').classList.add('flex');
+
+            updateHeader();
+            loadQuestion();
+        }
+
+        function updateHeader() {
+            document.getElementById('score-display').textContent = score;
+            const total = scenarios.length;
+            const current = currentQuestionIndex + 1;
+            document.getElementById('progress-text').textContent = `${current} / ${total}`;
+            const percentage = (current / total) * 100;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        function loadQuestion() {
+            const currentData = scenarios[currentQuestionIndex];
+            
+            // إخفاء صندوق التغذية الراجعة
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+
+            // تحديث نصوص السؤال
+            document.getElementById('category-badge').textContent = currentData.category;
+            document.getElementById('scenario-emoji').textContent = currentData.emoji;
+            document.getElementById('question-text').textContent = currentData.question;
+
+            // توليد أزرار الخيارات
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            // خلط الخيارات عشوائياً في كل مرة لزيادة المتعة
+            const shuffledOptions = [...currentData.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = "btn-option w-full text-right bg-white hover:bg-pink-50 border-2 border-gray-200 rounded-2xl p-4 font-bold text-gray-700 text-base sm:text-lg flex items-center gap-3 cursor-pointer";
+                
+                // إضافة حرف أو رقم مميز للخيار
+                const badges = ['أ', 'ب', 'ج'];
+                button.innerHTML = `
+                    <span class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-black shrink-0 border border-pink-200">
+                        ${badges[index]}
+                    </span>
+                    <span class="flex-1">${option.text}</span>
+                `;
+
+                button.onclick = () => handleAnswer(button, option.isCorrect, currentData.explanation);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedButton, isCorrect, explanation) {
+            const allButtons = document.querySelectorAll('#options-container button');
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const nextBtn = document.getElementById('next-btn');
+
+            // تعطيل جميع الأزرار بعد الاختيار
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-default');
+            });
+
+            selectedButton.classList.remove('opacity-70');
+
+            if (isCorrect) {
+                playSound('correct');
+                score++;
+                document.getElementById('score-display').textContent = score;
+
+                // تلوين الزر الصحيح بالأخضر
+                selectedButton.classList.remove('bg-white', 'border-gray-200', 'hover:bg-pink-50');
+                selectedButton.classList.add('bg-green-100', 'border-green-500', 'text-green-900');
+
+                // إعداد رسالة التشجيع
+                feedbackBox.className = "rounded-2xl p-4 sm:p-5 border-2 border-green-400 bg-green-50 text-green-900 mt-4 block";
+                feedbackIcon.textContent = "🌟";
+                feedbackTitle.textContent = `رائعة يا ${studentName}! تصرف صحيح 👏`;
+                feedbackMessage.textContent = explanation;
+
+                // إطلاق قصاصات احتفال صغيرة
+                if (typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 40,
+                        spread: 60,
+                        origin: { y: 0.7 }
+                    });
+                }
+            } else {
+                playSound('wrong');
+                // تلوين الزر الخاطئ بالأحمر مع اهتزاز
+                selectedButton.classList.remove('bg-white', 'border-gray-200', 'hover:bg-pink-50');
+                selectedButton.classList.add('bg-red-100', 'border-red-400', 'text-red-900', 'animate-shake');
+
+                // إعداد رسالة التوجيه اللطيفة
+                feedbackBox.className = "rounded-2xl p-4 sm:p-5 border-2 border-amber-400 bg-amber-50 text-amber-900 mt-4 block";
+                feedbackIcon.textContent = "💡";
+                feedbackTitle.textContent = "فكري مرة أخرى يا بطلة!";
+                feedbackMessage.textContent = explanation;
+            }
+
+            // تحديث نص زر التالي إذا كان هذا هو السؤال الأخير
+            if (currentQuestionIndex === scenarios.length - 1) {
+                nextBtn.innerHTML = `<span>عرض شهادة التميز</span> <i class="fas fa-award"></i>`;
+            } else {
+                nextBtn.innerHTML = `<span>الموقف التالي</span> <i class="fas fa-arrow-left"></i>`;
+            }
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < scenarios.length) {
+                updateHeader();
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            playSound('win');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('game-header').classList.add('hidden');
+            document.getElementById('game-header').classList.remove('flex');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('certificate-name').textContent = studentName;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('total-questions').textContent = scenarios.length;
+
+            const finalMessage = document.getElementById('final-message');
+            if (score === scenarios.length) {
+                finalMessage.textContent = "مذهل! لقد حصلتِ على العلامة الكاملة! أنتِ طالبة مثالية وقدوة رائعة لجميع زميلاتكِ في الالتزام بالسلوك الحسن والمواظبة.";
+            } else if (score >= scenarios.length / 2) {
+                finalMessage.textContent = "أحسنتِ يا بطلة! لديكِ معرفة رائعة بقواعد السلوك والمواظبة، ومع الاستمرار ستصبحين نجمة المدرسة الأولى.";
+            } else {
+                finalMessage.textContent = "محاولة جميلة يا صديقتي! لقد تعلمتِ اليوم قواعد مهمة جداً، جربي اللعب مرة أخرى لتجمعي كل النجوم!";
+            }
+
+            // احتفال كبير في النهاية
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
